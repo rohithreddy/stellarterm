@@ -1,19 +1,52 @@
-.PairPicker {
-  padding: 20px;
-  display: flex;
-  flex-flow: row wrap;
-}
-  .PairPicker__pair {
-    padding: 0.75em 1em;
-    border-top: 1px solid $s-color-neutral7;
+.PairPicker_assetPair {
+    padding: 16px 18px;
     border-bottom: 1px solid $s-color-neutral7;
-  }
-  .PairPicker__auxInfo {
+}
+
+.PairPicker_infoBar {
+    display: flex;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid $s-color-neutral7;
+
+    .InfoBar_pair {
+        flex: 1;
+    }
+
+    .Infobar_ticker {
+        width: 300px;
+        margin-left: 16px;
+        font-size: $s-scale-3;
+
+        .Ticker_title {
+            font-size: $s-scale-5;
+            color: $s-color-neutral4;
+            margin-bottom: 0;
+        }
+
+        .Ticker_data {
+            font-size: $s-scale-2;
+            line-height: 1;
+            margin-bottom: 0;
+            font-weight: bold;
+
+            .Ticker_course:first-child {
+                margin-right: 20px;
+            }
+        }
+    }
+}
+
+.PairPicker_seeOthers {
+    display: flex;
     font-size: $s-scale-6;
-    text-align: center;
+    justify-content: center;
     padding: 12px 18px;
     color: $s-color-neutral5;
-  }
-  .PairPicker__auxInfo a:hover {
-    color: $s-color-neutral3;
-  }
+    border-radius: 0 0 3px 3px;
+
+    &:hover {
+        color: $s-color-neutral4;
+        background: #fbfbfc;
+    }
+}

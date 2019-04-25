@@ -1,190 +1,163 @@
-const React = window.React = require('react');
-const ReactDOM = require('react-dom');
-const mountNode = document.getElementById('app');
-import NotFound from './components/NotFound.jsx';
-import AssetList from './components/AssetList.jsx';
-import Markets from './components/Markets.jsx';
-import Session from './components/Session.jsx';
-import Exchange from './components/Exchange.jsx';
-import Generic from './components/Generic.jsx';
-import Loading from './components/Loading.jsx';
-import Stellarify from './lib/Stellarify';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import url from 'url';
-import Header from './components/Header.jsx';
-import Driver from './lib/Driver';
-import images from './images';
+import PropTypes from 'prop-types';
+import Stellarify from './lib/Stellarify';
+import GlobalModal from './components/GlobalModal';
+import NotFound from './components/Pages/NotFound';
+import Markets from './components/Pages/Markets';
+import Download from './components/Pages/Download';
+import Exchange from './components/Pages/Exchange';
+import HomePage from './components/Pages/HomePage';
+import TermsOfUse from './components/Pages/TermsOfUse';
+import PrivacyPolicy from './components/Pages/PrivacyPolicy';
+import TestNetwork from './components/Pages/TestNetwork';
+import ReloadToTestnet from './components/Pages/ReloadToTestnet';
+import Session from './components/Session/Session';
+import Generic from './components/Generic';
+import Header from './components/Header';
 
-let network = {
-  horizonUrl: 'https://horizon.stellar.org',
-  networkPassphrase: StellarSdk.Networks.PUBLIC,
-  isDefault: true, // If it's default, then we don't show a notice bar at the top
-  isTestnet: false,
-  isCustom: false,
+import Footer from './components/Footer';
+import Driver from './lib/Driver';
+
+window.React = React;
+const mountNode = document.getElementById('app');
+
+// const DEFAULT_HORIZON_SERVER = 'https://horizon.stellar.org';
+const DEFAULT_HORIZON_SERVER = 'https://horizon.stellar.lobstr.co';
+
+const network = {
+    horizonUrl: DEFAULT_HORIZON_SERVER,
+    networkPassphrase: StellarSdk.Networks.PUBLIC,
+    isDefault: true, // If it's default, then we don't show a notice bar at the top
+    isTestnet: false,
+    isCustom: false,
 };
 
 if (window.location.hash === '#testnet') {
-  network.isDefault = false;
-  network.isTestnet = true;
-  network.horizonUrl = 'https://horizon-testnet.stellar.org';
-  network.networkPassphrase = StellarSdk.Networks.TESTNET;
+    network.isDefault = false;
+    network.isTestnet = true;
+    network.horizonUrl = 'https://horizon-testnet.stellar.org';
+    network.networkPassphrase = StellarSdk.Networks.TESTNET;
 } else if (window.stCustomConfig.horizonUrl) {
-  network.isDefault = false;
-  network.isCustom = true;
-  network.horizonUrl = window.stCustomConfig.horizonUrl;
-  if (window.stCustomConfig.networkPassphrase) {
-    network.networkPassphrase = window.stCustomConfig.networkPassphrase;
-  }
+    network.isDefault = false;
+    network.isCustom = true;
+    network.horizonUrl = window.stCustomConfig.horizonUrl;
+    if (window.stCustomConfig.networkPassphrase) {
+        network.networkPassphrase = window.stCustomConfig.networkPassphrase;
+    }
 }
 
 StellarSdk.Network.use(new StellarSdk.Network(network.networkPassphrase));
 
-let driver = new Driver({
-  network,
+const driver = new Driver({
+    network,
 });
 
 const parseUrl = (href) => {
-  let hash = url.parse(href).hash;
-  if (hash === null) {
-    return '';
-  }
-  return hash.substr(1);
-}
+    const hash = url.parse(href).hash;
+    return hash === null ? '' : hash.substr(1);
+};
 
 class TermApp extends React.Component {
-  constructor(props) {
-    super(props);
-    this.d = props.d;
-    this.state = {
-      // The url is the hash cleaned up
-      url: parseUrl(window.location.href)
-    };
-    window.addEventListener('hashchange', (e) => {
-      if (e.newURL.indexOf('/#testnet') !== -1) {
-        window.location.reload();
-      }
-      this.setState({
-        url: parseUrl(e.newURL)
-      })
-    } , false);
-  }
-  render() {
-    let url = this.state.url;
-    let urlParts = url.split('/');
+    constructor(props) {
+        super(props);
 
-    let body;
-    if (url === '') {
-      // Home page
-      body = <div>
-        <div className="HomePage__black">
-          <div className="so-back">
-            <div className="HomePage__lead">
-              <h2 className="HomePage__lead__title">Stellar Distributed Exchange</h2>
-              <p>A trading platform that enables near-instant trades between any asset on the Stellar network</p>
-            </div>
-          </div>
-        </div>
-        <div className="so-back islandBack HomePage__assetList">
-          <div className="island">
-            <AssetList d={this.props.d} limit={5}></AssetList>
-            <div className="HomePage__seeMore">
-              View more assets on the <a href="#markets">market list page</a>.
-            </div>
-          </div>
-        </div>
-        <div className="so-back islandBack">
-          <div className="island">
-            <h3 className="HomePage__sectionTitle">Make trades and send payments</h3>
-            <div className="island__sub">
-              <div className="island__sub__division HomePage__introImage">
-                <a href="#exchange"><img className="HomePage__screenshot" src={images.order} /></a>
-              </div>
-              <div className="island__sub__division HomePage__introImage">
-                <a href="#account"><img className="HomePage__screenshot" src={images.send} /></a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="so-back islandBack">
-          <div className="island">
-            <div className="island__sub">
-              <div className="island__sub__division HomePage__introImage">
-                <a href="https://github.com/irisli/stellarterm"><img className="HomePage__screenshot" src={images.github} /></a>
-              </div>
-              <div className="island__sub__division">
-                <div className="HomePage__sideBlurb">
-                  <p>StellarTerm is just a client that can be used to access the Stellar distributed exchange. Neither StellarTerm nor the developers of it are involved with operating the Stellar network.</p>
-                  <p>StellarTerm is open source software. To support the project, please <a href="https://github.com/irisli/stellarterm">star the project on GitHub</a>.</p>
-                  <p>StellarTerm is developed by <a href="https://iris.li/">Iris Li</a>, a former employee of the Stellar Development Foundation. The project is independent of the Stellar Development Foundation.</p>
-                  <p>The project is released under the Apache-2.0 license and is released as is without warranty.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    } else if (urlParts[0] === 'testnet') {
-      if (network.isTestnet) {
-        body = <Generic title="Test network">
-          You are running on the <a href="https://www.stellar.org/developers/guides/concepts/test-net.html">Stellar test network</a>. This network is for development purposes only and the test network may be occasionally reset.
-          <br />
-          To create a test account on the test network, use the <a href="https://www.stellar.org/laboratory/#account-creator?network=test">Friendbot to get some test lumens</a>.
-        </Generic>
-      } else {
-        body = <Generic title="Please refresh the page to switch to testnet"><Loading darker={true}>
-          Please refresh the page to switch to testnet.
-        </Loading></Generic>
-      }
-    } else if (urlParts[0] === 'account') {
-      body = <Session d={this.d} urlParts={urlParts}></Session>
-    } else if (urlParts[0] === 'markets') {
-      body = <Markets d={this.d}></Markets>
-    } else if (urlParts[0] === 'exchange') {
-      if (urlParts.length === 3) {
-        try {
-          let baseBuying = Stellarify.parseAssetSlug(urlParts[1]);
-          let counterSelling = Stellarify.parseAssetSlug(urlParts[2]);
+        this.d = props.d;
+        this.state = {
+            // The url is the hash cleaned up
+            url: parseUrl(window.location.href),
+        };
 
-          this.d.handlers.setOrderbook(baseBuying, counterSelling);
-          body = <Exchange d={this.d}></Exchange>
-        } catch (e) {
-          console.error(e);
-          body = <Generic title="Pick a market">Exchange url was invalid. To begin, go to the <a href="#markets">market list page</a> and pick a trading pair.</Generic>
-        }
-      } else {
-        if (this.d.orderbook.ready) {
-          setTimeout(() => {
-            let newUrl = Stellarify.pairToExchangeUrl(this.d.orderbook.baseBuying, this.d.orderbook.counterSelling);
-            history.replaceState(null, null, '#' + newUrl);
-            this.setState({
-              url: newUrl,
-            })
-          }, 0);
-          body = <Generic title="Loading orderbook">Loading</Generic>
-        } else {
-          // Default to a market with good activity
-          let baseBuying = StellarSdk.Asset.native();
-          let counterSelling = new StellarSdk.Asset('CNY', 'GAREELUB43IRHWEASCFBLKHURCGMHE5IF6XSE7EXDLACYHGRHM43RFOX');
-
-          this.d.handlers.setOrderbook(baseBuying, counterSelling);
-          setTimeout(() => {
-            let newUrl = Stellarify.pairToExchangeUrl(baseBuying, counterSelling);
-            history.replaceState(null, null, '#' + newUrl);
-            this.setState({
-              url: newUrl,
-            })
-          }, 0);
-        }
-      }
-    } else {
-      body = <NotFound></NotFound>
+        window.addEventListener('hashchange', (e) => {
+            if (e.newURL.indexOf('/#testnet') !== -1) {
+                window.location.reload();
+            }
+            this.setState({ url: parseUrl(e.newURL) });
+        }, false);
     }
 
-    return <div>
-      <Header d={this.props.d} urlParts={urlParts} network={network}></Header>
-      {body}
-    </div>;
+    render() {
+        const currentUrl = this.state.url;
+        const urlParts = currentUrl.split('/');
 
-  }
+        let body;
+        if (currentUrl === '') {
+            // Home page
+            body = <HomePage driver={this.props.d} />;
+        } else if (urlParts[0] === 'download') {
+            body = <Download />;
+        } else if (urlParts[0] === 'testnet' && network.isTestnet) {
+            body = <TestNetwork />;
+        } else if (urlParts[0] === 'testnet') {
+            body = <ReloadToTestnet />;
+        } else if (urlParts[0] === 'privacy') {
+            body = <PrivacyPolicy />;
+        } else if (urlParts[0] === 'terms-of-use') {
+            body = <TermsOfUse />;
+        } else if (['account', 'signup', 'ledger'].indexOf(urlParts[0]) > -1) {
+            body = <Session d={this.d} urlParts={urlParts} />;
+        } else if (urlParts[0] === 'markets') {
+            body = <Markets d={this.d} />;
+        } else if (urlParts[0] === 'exchange' && urlParts.length === 3) {
+            try {
+                const baseBuying = Stellarify.parseAssetSlug(urlParts[1]);
+                const counterSelling = Stellarify.parseAssetSlug(urlParts[2]);
+
+                this.d.orderbook.handlers.setOrderbook(baseBuying, counterSelling);
+                body = <Exchange d={this.d} />;
+            } catch (e) {
+                console.error(e);
+                body =
+                    (<Generic title="Pick a market">
+                        Exchange url was invalid. To begin, go to the <a href="#markets">market
+                        list page</a> and pick a trading pair.
+                    </Generic>);
+            }
+        } else if (urlParts[0] === 'exchange' && this.d.orderbook.data.ready) {
+            setTimeout(() => {
+                const { baseBuying, counterSelling } = this.d.orderbook.data;
+                const newUrl = Stellarify.pairToExchangeUrl(baseBuying, counterSelling);
+                window.history.replaceState(null, null, `#${newUrl}`);
+                this.setState({
+                    url: newUrl,
+                });
+            }, 0);
+            body = <Generic title="Loading orderbook">Loading</Generic>;
+        } else if (urlParts[0] === 'exchange') {
+            // Default to a market with good activity
+            const baseBuying = new StellarSdk.Asset('MOBI', 'GA6HCMBLTZS5VYYBCATRBRZ3BZJMAFUDKYYF6AH6MVCMGWMRDNSWJPIH');
+            const counterSelling = StellarSdk.Asset.native();
+
+            this.d.orderbook.handlers.setOrderbook(baseBuying, counterSelling);
+            setTimeout(() => {
+                const newUrl = Stellarify.pairToExchangeUrl(baseBuying, counterSelling);
+                window.history.replaceState(null, null, `#${newUrl}`);
+                this.setState({
+                    url: newUrl,
+                });
+            }, 0);
+        } else {
+            body = <NotFound />;
+        }
+
+        return (
+            <div className="AppStretch">
+                <GlobalModal d={this.props.d} />
+                <div className="AppStretch AppContainer">
+                    <div>
+                        <Header d={this.props.d} rootAddress={urlParts[0]} network={network} />
+                        {body}
+                    </div>
+                    <Footer />
+                </div>
+            </div>
+        );
+    }
+}
+
+TermApp.propTypes = {
+    d: PropTypes.instanceOf(Driver).isRequired,
 };
 
 ReactDOM.render(<TermApp d={driver} />, mountNode);

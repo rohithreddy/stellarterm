@@ -1,6 +1,6 @@
-[![Travis CI status](https://travis-ci.org/irisli/stellarterm.svg?branch=master)](https://travis-ci.org/irisli/stellarterm)
+[![Travis CI status](https://travis-ci.org/stellarterm/stellarterm.svg?branch=master)](https://travis-ci.org/stellarterm/stellarterm)
 
-# StellarTerm ecosystem - [client](https://stellarterm.com/) | [api](https://github.com/irisli/stellarterm/tree/master/api) | [directory](https://github.com/irisli/stellarterm/blob/master/directory/)
+# StellarTerm ecosystem - [client](https://stellarterm.com/) | [api](https://github.com/stellarterm/stellarterm/tree/master/api) | [directory](https://github.com/stellarterm/stellarterm/blob/master/directory/)
 This StellarTerm monorepo consists of multiple projects built for the [Stellar network](https://www.stellar.org/) including a [trading client](https://stellarterm.com/). The projects are in this monorepo to enable faster development speed.
 
 ## Web Client
@@ -13,8 +13,8 @@ The API uses the [Serverless framework](https://serverless.com/) for deployment 
 
 It is currently under active development and is not yet finished. See it in action here: [https://api.stellarterm.com/](https://api.stellarterm.com/)
 
-## [Directory](https://github.com/irisli/stellarterm/blob/master/directory/README.md)
-StellarTerm maintains a manually curated directory file with a listing of well known anchors and assets on the Stellar network. For more information, see the [directory README](https://github.com/irisli/stellarterm/blob/master/directory/README.md).
+## [Directory](https://github.com/stellarterm/stellarterm/blob/master/directory/README.md)
+StellarTerm maintains a manually curated directory file with a listing of well known anchors and assets on the Stellar network. For more information, see the [directory README](https://github.com/stellarterm/stellarterm/blob/master/directory/README.md).
 
 -------------------------------------------------------------------------------
 
@@ -35,37 +35,6 @@ export STELLARTERM_CUSTOM_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 
 Once built, the configuration will be embedded into the StellarTerm output file (and the environment variable is no longer needed). To check this, look at the output of `index.html` and search for `stCustomConfig`.
 
-## StellarTerm client screenshots
-### A detailed user friendly orderbook
-![Orderbook](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/orderbook.png)
-
-### Ability to add trust either from a curated list, manually, or via federation
-![Adding trust from directories](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/adding-trust-from-directory.png)
-
-![Adding trust via federation](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/adding-trust-via-federation.png)
-
-### Price history charts
-![Price history charts](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/history-chart.png)
-
-### Ability to make offers in an intuitive manner
-![Offer maker](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/offermaker.png)
-
-### A directory of the asset pairs traded on the Stellar network
-![Market directory](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/marketdirectory.png)
-
-### Manage offers for an account
-![Manage offers](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/manage-offers.png)
-
-### Shows listing of balances with secure asset cards
-![Detailed balances](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/detailed-balances.png)
-
-### Compatible with accounts from any other client
-![Universal login](https://raw.githubusercontent.com/irisli/stellarterm/master/screenshots/universal-login.png)
-
-## Under the cover features
-- No external dependencies or trackers
-- All GitHub commits [securely signed with GPG](https://github.com/blog/2144-gpg-signature-verification)
-
 ## Deployment
 The project is hosted on GitHub pages in the [stellarterm/stellarterm.github.io](https://github.com/stellarterm/stellarterm.github.io/) repository. The client is wrapped into a single html file and it's sha 256 sum is recorded on each git commit.
 
@@ -81,7 +50,7 @@ node --version
 ### Environment Setup
 ```sh
 # Clone the project
-git clone https://github.com/irisli/stellarterm.git
+git clone https://github.com/stellarterm/stellarterm.git
 cd stellarterm
 
 # Install the npm and bower dependencies
@@ -102,7 +71,7 @@ npm run production
 ```
 
 ## License
-Products in the StellarTerm ecosystem is open source software and is licensed under the [Apache-2.0 license](https://github.com/irisli/stellarterm/blob/master/LICENSE-2.0.txt). Please understand the license carefully before using StellarTerm.
+Products in the StellarTerm ecosystem is open source software and is licensed under the [Apache-2.0 license](https://github.com/stellarterm/stellarterm/blob/master/LICENSE-2.0.txt). Please understand the license carefully before using StellarTerm.
 
 ## Credits
 - Started the project using the super helpful [react-gulp-browserify yeoman generator](https://github.com/randylien/generator-react-gulp-browserify)

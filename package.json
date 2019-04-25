@@ -1,13 +1,13 @@
 {
   "name": "stellar-terminal",
   "version": "0.0.1",
-  "author": "Iris Li",
+  "author": "Ultra Stellar, LLC",
   "license": "Apache-2.0",
   "private": true,
   "scripts": {
     "test": "./test.sh",
-    "setup": "npm install && ./node_modules/.bin/bower install",
-    "start": "./node_modules/.bin/gulp watch",
+    "setup": "yarn install",
+    "start": "./node_modules/.bin/gulp",
     "directory/": "npm run directory",
     "directory": "cd directory && ./checkBuild.sh;",
     "lint": "./node_modules/.bin/eslint .",
@@ -16,42 +16,41 @@
     "production": "NODE_ENV=production; ./node_modules/.bin/gulp production"
   },
   "dependencies": {
-    "babelify": "^7.3.0",
-    "bignumber.js": "^4.0.0",
-    "gulp-sass": "^3.1.0",
-    "lodash": "^4.17.4",
-    "mkdirp": "^0.5.1",
-    "prop-types": "^15.5.10",
-    "react-select": "~1.0.0-rc.10",
-    "solar-css": "git+https://github.com/stellar/solar.git"
+    "awesome-debounce-promise": "2.1.0",
+    "babelify": "7.3.0",
+    "bignumber.js": "4.1.0",
+    "fast-average-color": "^4.3.0",
+    "gulp-sass": "3.1.0",
+    "gulp-useref": "3.1.4",
+    "lodash": "4.17.5",
+    "moment": "^2.24.0",
+    "prop-types": "15.6.0",
+    "qrcode.react": "^0.9.3",
+    "react": "16.2.0",
+    "react-dom": "16.2.0",
+    "whatwg-fetch": "^3.0.0",
+    "react-input-autosize": "^2.2.1",
+    "yargs": "^12.0.5"
   },
   "devDependencies": {
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-preset-env": "^1.1.6",
-    "babel-preset-react": "^6.16.0",
-    "browser-sync": "latest",
-    "browserify": "latest",
-    "del": "~0.1.3",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb": "^14.1.0",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-jsx-a11y": "^3.0.2",
-    "eslint-plugin-react": "^6.10.3",
-    "gulp": ">=3.8.8",
-    "gulp-autoprefixer": "^3.1.1",
-    "gulp-bower": "0.0.6",
-    "gulp-exit": "0.0.2",
-    "gulp-inline-source": "^3.0.0",
-    "gulp-load-plugins": "~0.7.0",
-    "gulp-uglify": "^2.0.0",
-    "gulp-util": "~3.0.1",
-    "jest-cli": "^18.1.0",
-    "puppeteer": "^0.12.0",
-    "react": "latest",
-    "react-dom": "latest",
-    "run-sequence": "^1.2.2",
-    "vinyl-source-stream": "^1.0.0",
-    "watchify": "^3.8.0"
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-preset-env": "1.6.1",
+    "babel-preset-react": "6.24.1",
+    "browser-sync": "2.23.6",
+    "browserify": "16.0.0",
+    "del": "0.1.3",
+    "eslint": "3.19.0",
+    "eslint-config-airbnb": "14.1.0",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-jsx-a11y": "3.0.2",
+    "eslint-plugin-react": "6.10.3",
+    "gulp": "3.9.1",
+    "gulp-autoprefixer": "3.1.1",
+    "gulp-inline-source": "3.1.0",
+    "gulp-uglify": "2.1.2",
+    "run-sequence": "1.2.2",
+    "vinyl-source-stream": "1.1.2",
+    "watchify": "3.10.0"
   },
   "engines": {
     "node": ">=7.4.0"
@@ -86,15 +85,5 @@
       ]
     ]
   },
-  "browser": {},
-  "eslintConfig": {
-    "extends": "airbnb",
-    "globals": {
-      "StellarSdk": true
-    },
-    "rules": {
-      "new-cap": "warn",
-      "no-underscore-dangle": "off"
-    }
-  }
+  "browser": {}
 }

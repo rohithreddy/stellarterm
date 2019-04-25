@@ -19,6 +19,8 @@ function DirectoryBuilder() {
   this.destinations = {};
   this.assets = {};
   this.issuers = {};
+  this.wildcardIssuers = {};
+  this.wildcardDomains = {};
   this.pairs = {};
 
   // Special anchors aren't really anchors at all!
@@ -26,7 +28,7 @@ function DirectoryBuilder() {
     name: 'Stellar Network',
     website: 'https://www.stellar.org/lumens/',
     logo: logos['stellar'],
-    color: '#08b5e5',
+    color: '#000000',
   };
   this.nativeAsset = {
     code: 'XLM',
@@ -78,6 +80,11 @@ DirectoryBuilder.prototype.addAnchor = function(details) {
   }
 }
 
+const POSSIBLE_ASSET_TYPES = {
+  'token': true, // Token means that the coin on Stellar is the coin itself
+  'iou': true, // IOU means that the issuer supposedly claims the tokens are backed by something outside of Stellar
+};
+
 DirectoryBuilder.prototype.addAsset = function(anchorDomain, details) {
   if (!this.anchors.hasOwnProperty(anchorDomain)) {
     throw new Error('Attempting to add asset to nonexistent anchor: ' + anchorDomain + ' slug: ' + slug);
@@ -105,12 +112,52 @@ DirectoryBuilder.prototype.addAsset = function(anchorDomain, details) {
     domain: anchorDomain,
   };
   if (details.instructions) {
-      this.assets[slug]['instructions'] = details.instructions;
+    this.assets[slug]['instructions'] = details.instructions;
+  }
+  if (details.warning) {
+    this.assets[slug]['warning'] = details.warning;
+  }
+  if (details.disabled) {
+    this.assets[slug]['disabled'] = true;
+  }
+  if (details.unlisted) {
+    if (details.unlisted !== true) {
+      throw new Error('Asset property unlisted must be unset or true: ' + slug);
+    }
+    this.assets[slug]['unlisted'] = true;
+  }
+  if (details.type) {
+    if (details.type in POSSIBLE_ASSET_TYPES) {
+      this.assets[slug].type = details.type;
+    } else {
+      throw new Error('Invalid asset type "' + details.type + '" for token: ' + slug);
+    }
   }
 
   this.anchors[anchorDomain].assets[details.code] = slug;
   this.issuers[details.issuer][details.code] = slug;
 }
+
+// Wildcards are a 1-to-1 mapping to a domain
+DirectoryBuilder.prototype.addWildcard = function(anchorDomain, details) {
+  if (!this.anchors.hasOwnProperty(anchorDomain)) {
+    throw new Error('Attempting to add wildcard asset to nonexistent anchor: ' + anchorDomain);
+  }
+  if (details.issuer === undefined) {
+    throw new Error('Missing issuer when trying to add wildcard');
+  }
+
+  if (this.wildcardIssuers.hasOwnProperty(details.issuer)) {
+    throw new Error('Duplicate issuer in wildcards: ' + details.issuer);
+  }
+  if (this.wildcardDomains.hasOwnProperty(anchorDomain)) {
+    throw new Error('Duplicate domain in wildcards: ' + details.issuer);
+  }
+
+  this.wildcardIssuers[details.issuer] = anchorDomain;
+  this.wildcardDomains[anchorDomain] = details.issuer;
+}
+
 
 DirectoryBuilder.prototype.addDestination = function(accountId, opts) {
   if (!opts.name) {
@@ -137,11 +184,36 @@ DirectoryBuilder.prototype.addDestination = function(accountId, opts) {
       throw new Error('Destination opts.mergeOpAccepted must either be true or false');
     }
   }
+
+  this.destinations[accountId].pathPaymentAccepted = false;
+  if (opts.pathPaymentAccepted !== undefined) {
+    if (opts.pathPaymentAccepted === true) {
+      this.destinations[accountId].pathPaymentAccepted = true;
+    } else if (opts.pathPaymentAccepted !== false) {
+      throw new Error('Destination opts.pathPaymentAccepted must either be true or false');
+    }
+  }
+
+  if (Array.isArray(opts.acceptedAssetsWhitelist)) {
+    this.destinations[accountId].acceptedAssetsWhitelist = [];
+    opts.acceptedAssetsWhitelist.forEach(assetSlug => {
+      if (typeof assetSlug !== 'string') {
+        throw new Error('Destination opts.acceptedAssetsWhitelist must be string. Got: ' + assetSlug);
+      } else if (assetSlug.indexOf('-') < 1) {
+        throw new Error('Destination opts.acceptedAssetsWhitelist must be in slug format like XLM-native or BTC-GA7B. Got: ' + assetSlug);
+      }
+
+      this.destinations[accountId].acceptedAssetsWhitelist.push(assetSlug);
+    });
+  }
 }
 
 // Must specify by domain
 // You can only add pairs with known issuers. Otherwise, the purpose of the directory is defeated
 DirectoryBuilder.prototype.addPair = function(opts) {
+  if (!opts.baseBuying || !opts.counterSelling) {
+    throw new Error('Both baseBuying and counterSelling are required when adding pair. (You probably have a duplicate?)');
+  }
   let baseAsset = this.getAssetByDomain(opts.baseBuying[0], opts.baseBuying[1]);
   let counterAsset = this.getAssetByDomain(opts.counterSelling[0], opts.counterSelling[1]);
   if (baseAsset === null) {
@@ -180,6 +252,7 @@ DirectoryBuilder.prototype.getAnchor = function(domain) {
   if (this.anchors.hasOwnProperty(domain)) {
     return this.anchors[domain];
   }
+
   return this.unknownAnchor;
 }
 
@@ -217,6 +290,16 @@ DirectoryBuilder.prototype.getAssetByDomain = function(code, domain) {
       domain: domain,
     };
   }
+
+  if (this.wildcardDomains.hasOwnProperty(domain)) {
+    return {
+      code: code,
+      issuer: this.wildcardDomains[domain],
+      domain: domain,
+    }
+  }
+
+  return null;
 }
 
 // Returns unknown if asset is not found
@@ -227,6 +310,14 @@ DirectoryBuilder.prototype.getAssetByAccountId = function(code, issuer) {
 
   let slug = code + '-' + issuer;
   if (!this.assets.hasOwnProperty(slug)) {
+    if (this.wildcardIssuers.hasOwnProperty(issuer)) {
+      return {
+        code: code,
+        issuer: issuer,
+        domain: this.wildcardIssuers[issuer],
+      }
+    }
+
     return null;
   }
   return this.assets[slug];

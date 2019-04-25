@@ -1,20 +1,31 @@
-const React = window.React = require('react');
+import React from 'react';
+import PropTypes from 'prop-types';
 
-export default class Loading extends React.Component {
-  render() {
-    let loadingClass = '';
-    if (this.props.size === 'large') {
-      loadingClass = ' Loading--large';
+window.React = React;
+
+export default function Loading(props) {
+    let loadingClass = 'Loading';
+    if (props.size === 'large') {
+        loadingClass += ' Loading--large';
     }
 
     // Use darker for when text contains content that should be legible
-    if (this.props.darker) {
-      loadingClass = ' Loading--darker';
+    if (props.darker) {
+        loadingClass += ' Loading--darker';
     }
 
-    return <div className={'Loading' + loadingClass}>
-      <p className="Loading__message">{this.props.children}</p>
-    </div>
-  }
+    if (props.left) {
+        loadingClass += ' Loading--left';
+    }
+
+    return (<div className={loadingClass}>
+        <p className="Loading__message">{props.children}</p>
+    </div>);
 }
 
+Loading.propTypes = {
+    size: PropTypes.string,
+    darker: PropTypes.bool,
+    left: PropTypes.bool,
+    children: PropTypes.node,
+};

@@ -1,47 +1,98 @@
-const React = window.React = require('react');
-const _ = require('lodash');
-import Printify from '../lib/Printify';
+import React from 'react';
 import PropTypes from 'prop-types';
-
-
-const oddBackground = '#f7f7f7';
-const buyBackground = '#dcf6de';
-const sellBackground = '#fed6d8';
+import BigNumber from 'bignumber.js';
+import Printify from '../lib/Printify';
+import Format from '../lib/Format';
+import Driver from '../lib/Driver';
 
 // Dumb component that mainly renders the UI
-export default function OfferTable(props) {
-  return <div className="OfferTable">
-    <div className="OfferTable__header">
-      <div className="OfferTable__header__item">Price</div>
-      <div className="OfferTable__header__item">{props.baseCurrency}</div>
-      <div className="OfferTable__header__item">{props.counterCurrency}</div>
-      <div className="OfferTable__header__item">Depth ({props.counterCurrency})</div>
-    </div>
-    {
-      _.map(props.offers, (offer, index) => {
-        let altColor = index % 2 === 0 ? '#fff' : '#f4f4f5'; // #f4f4f5 is $s-color-neutral8
-        let depthPercentage = Math.min(100, Number(offer.depth / props.maxDepth * 100).toFixed(1));
-        let rowStyle = {};
-        if (props.side === 'buy') {
-          rowStyle.background = `linear-gradient(to left, ${buyBackground} ${depthPercentage}%, ${altColor} ${depthPercentage}%)`;
-        } else {
-          rowStyle.background = `linear-gradient(to right, ${sellBackground} ${depthPercentage}%, ${altColor} ${depthPercentage}%)`;
-        }
-        return <div
-          className="OfferTable__row"
-          key={offer.key}
-          style={rowStyle}
-          onClick={() => props.d.handlers.orderbookPricePick(offer.price)}>
-          <div className="OfferTable__row__item">{Printify.lightenZeros(offer.price)}</div>
-          <div className="OfferTable__row__item">{Printify.lightenZeros(offer.base)}</div>
-          <div className="OfferTable__row__item">{Printify.lightenZeros(offer.counter)}</div>
-          <div className="OfferTable__row__item">{Printify.lightenZeros(offer.depth)}</div>
-        </div>
-      })
+export default class OfferTable extends React.Component {
+
+    getRowStyle(isBuy, offer) {
+        const depthPercentage =
+          Math.min(100, Number((offer.depth / this.props.maxDepth) * 100).toFixed(1));
+
+        const rowStyle = {};
+        const background = isBuy ? '#dcf6de' : '#fed6d8';
+        const gradientDirection = isBuy ? 'to left' : 'to right';
+
+        rowStyle.background =
+          `linear-gradient(${gradientDirection}, ${background} ${depthPercentage}%, transparent ${depthPercentage}%)`;
+
+        return rowStyle;
     }
-  </div>
+
+    getHeader(isBuy) {
+        const headerItems = [
+            `Sum ${this.props.counterCurrency}`,
+            this.props.counterCurrency,
+            this.props.baseCurrency,
+            'Price'];
+
+        if (!isBuy) { headerItems.reverse(); }
+
+        return headerItems.map(item => (
+           <div className="OfferTable__header__item" key={item}>{item}</div>
+        ));
+    }
+
+    getRowItems(isBuy, offer) {
+        const hasOffers = this.props.offers.length !== 0;
+
+        const depthNumDecimals = hasOffers ?
+            Math.max(0, Format.niceNumDecimals(this.props.offers[this.props.offers.length - 1].depth)) : 7;
+
+        const priceIndex = isBuy ? (this.props.offers.length - 1) : 0;
+        const priceNumDecimals = hasOffers ?
+            Math.max(4, Format.niceNumDecimals(this.props.offers[priceIndex].price)) : 7;
+
+        const rowItems = [
+            { value: Number(offer.depth).toLocaleString('en-US',
+                { minimumFractionDigits: depthNumDecimals, maximumFractionDigits: depthNumDecimals }),
+                key: 'sum' },
+            { value: Printify.lightenZeros(offer.counter), key: 'counter' },
+            { value: Printify.lightenZeros(offer.base), key: 'base' },
+            { value: Printify.lightenZeros(offer.price, priceNumDecimals), key: 'price' }];
+
+        if (!isBuy) { rowItems.reverse(); }
+
+        return rowItems.map(({ value, key }) => (
+                <div key={key} className="OfferTable__row__item">{value}</div>
+            ),
+        );
+    }
+
+    getRows(isBuy) {
+        return this.props.offers.map(offer => (
+            <div className="OfferTable__row_background" key={offer.key}>
+                <div
+                    className="OfferTable__row"
+                    style={this.getRowStyle(isBuy, offer)}
+                    onClick={() => this.props.d.orderbook.handlers.pickPrice(offer.price)}>
+                    {this.getRowItems(isBuy, offer)}
+                </div>
+            </div>
+        ));
+    }
+
+    render() {
+        const isBuy = this.props.side === 'buy';
+
+        return (
+            <div className="OfferTable">
+                <div className="OfferTable__header">{this.getHeader(isBuy)}</div>
+                <div className="OfferTable__table">
+                    {this.getRows(isBuy)}
+                </div>
+            </div>
+        );
+    }
 }
 OfferTable.propTypes = {
-  offers: PropTypes.arrayOf(PropTypes.object).isRequired,
-  side: PropTypes.oneOf(['buy', 'sell']).isRequired,
+    d: PropTypes.instanceOf(Driver).isRequired,
+    offers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    side: PropTypes.oneOf(['buy', 'sell']).isRequired,
+    counterCurrency: PropTypes.string,
+    baseCurrency: PropTypes.string,
+    maxDepth: PropTypes.instanceOf(BigNumber),
 };

@@ -1,6 +1,8 @@
-const React = window.React = require('react');
-import Printify from '../lib/Printify';
+import React from 'react';
+import PropTypes from 'prop-types';
 import directory from '../directory';
+import AssetCardMain from './AssetCardMain';
+import hexToRGBA from '../lib/hexToRgba';
 
 // This is AssetCard2, the preferred way of displaying an asset in stellarterm.
 // The parent container should be 340px or wider
@@ -11,77 +13,114 @@ import directory from '../directory';
 // You may also pass in children elements to sit nicely with the AssetCard2.
 // The children elements are responsible for padding within the AssetCard
 
-const decAtIndex = (input, index) => {
-  return parseInt(input.substr(index,2),16);
-}
-const hexToRgba = (input, opacity) => {
-  return 'rgba(' + decAtIndex(input, 1) + ',' + decAtIndex(input, 3) + ',' + decAtIndex(input, 5) + ',' + BACKGROUND_OPACITY + ')';
-}
-
-const BACKGROUND_OPACITY = 0.08;
-
-export default class AssetCard2 extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-  render() {
-    if (!this.props.code) {
-      throw new Error('AssetCard2 expects to get a code in the props. Instead, got: ' + this.props.code)
+export default function AssetCard2(props) {
+    if (!props.code) {
+        throw new Error(`AssetCard2 expects to get a code in the props. Instead, got: ${props.code}`);
     }
+
+    const isXLMNative = props.code === 'XLM' && props.domain === undefined && props.issuer === undefined;
+    const haveDomain = props.domain !== undefined;
+    const haveIssuer = props.issuer !== undefined;
 
     let asset = {};
-    if (this.props.domain !== undefined) {
-      asset = directory.getAssetByDomain(this.props.code, this.props.domain);
-      if (asset === null) {
-        throw new Error('AssetCard2 expects domains to point to a valid asset/anchor. Please do validation before calling AssetCard2');
-      }
-    } else if (this.props.issuer !== undefined) {
-      asset = directory.resolveAssetByAccountId(this.props.code, this.props.issuer);
+    if (isXLMNative) {
+        asset = directory.nativeAsset;
+    } else if (haveDomain) {
+        asset = directory.getAssetByDomain(props.code, props.domain);
+    } else if (haveIssuer) {
+        asset = directory.resolveAssetByAccountId(props.code, props.issuer);
     } else {
-      throw new Error('AssetCard2 expects to get either domain or issuer');
+        throw new Error(
+            `AssetCard2 expects to get either domain or issuer. Input code: ${props.code} Domain: ${
+                props.domain
+            } Issuer: ${props.issuer}`,
+        );
+    }
+    if (asset === null) {
+        throw new Error(
+            'AssetCard2 expects domains or issuer to point to a valid asset/anchor. Please do validation before calling AssetCard2',
+        );
     }
 
-    let anchor = directory.getAnchor(asset.domain);
+    const anchor = directory.getAnchor(asset.domain);
+
+    const issuerAccountId =
+        asset.issuer === null
+            ? 'native lumens'
+            : `${asset.issuer.substr(0, 12)}.........${asset.issuer.substr(-12, 12)}`;
+
+    const assetCardClass = `AssetCard2 AssetCard2--container ${props.boxy ? 'AssetCard2--boxy' : ''}`;
+
+    let currency;
+    let hostName;
+    let { color } = anchor;
+    let { logo, name } = anchor;
+    let logoPadding = false;
+    const isUnknown = name === 'unknown';
+
+    if (isUnknown) {
+        const unknownAssetsData = JSON.parse(localStorage.getItem('unknownAssetsData')) || [];
+        const assetData = unknownAssetsData.find(assetLocalItem => (
+            assetLocalItem.code === props.code && assetLocalItem.issuer === props.issuer
+        )) || {};
+
+        currency = props.currency || assetData.currency;
+        hostName = props.host || assetData.host;
+        color = props.color || assetData.color || anchor.color;
+    }
+
+    name = hostName || name;
+
+    if (currency) {
+        const { image, host } = currency;
+        const domain = host && host.split('//')[1];
+        name = domain || name;
+        logo = image || logo;
+        logoPadding = !!image;
+    }
+
     let borderStyle = {};
-    let backgroundStyle = {};
-    if (anchor.color) {
-      borderStyle.borderColor = anchor.color;
-      let rgbaColor = hexToRgba(anchor.color, BACKGROUND_OPACITY);
-      backgroundStyle.background = rgbaColor;
+    const backgroundStyle = {};
+
+    if (color) {
+        backgroundStyle.background = hexToRGBA(color, 0.08);
+        borderStyle.borderColor = color;
     }
 
-    let issuerAccountId = (asset.issuer === null) ? 'native lumens' : asset.issuer;
-    // Unlike AssetCard (original), this one does not link to the domain. Users can simply type it in the address bar
+    if (props.noborder) {
+        borderStyle = { border: 'none' };
+    }
 
-    let assetCardMain = <div className="AssetCard2__main" style={backgroundStyle}>
-      <img className="AssetCard2__logo" src={anchor.logo}></img>
-      <div className="AssetCard2__content">
-        <div className="AssetCard2__header">
-          <span className="AssetCard2__header__code">{asset.code}</span>
-          <span className="AssetCard2__header__domain">{anchor.name}</span>
+    return (
+        <div className={assetCardClass} style={borderStyle}>
+            <AssetCardMain
+                backgroundStyle={backgroundStyle}
+                logo={logo}
+                logoWithPadding={logoPadding}
+                name={name}
+                assetCode={asset.code}
+                issuerAccountId={issuerAccountId} />
+
+            {props.children ? (
+                <div className="AssetCard2__addon" style={Object.assign({}, borderStyle, backgroundStyle)}>
+                    {props.children}
+                </div>
+            ) : null}
         </div>
-        <p className="AssetCard2__issuerAccountId">{issuerAccountId}</p>
-      </div>
-    </div>
+    );
+}
 
-    let containerClassName = 'AssetCard2';
-
-    if (this.props.boxy) {
-      containerClassName += ' AssetCard2--boxy';
-    }
-
-    if (this.props.children) {
-      containerClassName += ' AssetCard2--container';
-      return <div className={containerClassName} style={borderStyle}>
-        {assetCardMain}
-        <div className="AssetCard2__addon" style={Object.assign({}, borderStyle, backgroundStyle)}>
-          {this.props.children}
-        </div>
-      </div>
-    }
-
-    return <div className={containerClassName} style={borderStyle}>
-      {assetCardMain}
-    </div>
-  }
+AssetCard2.propTypes = {
+    code: PropTypes.string.isRequired,
+    boxy: PropTypes.bool,
+    issuer: PropTypes.string,
+    domain: PropTypes.string,
+    children: PropTypes.element,
+    noborder: PropTypes.bool,
+    host: PropTypes.string,
+    color: PropTypes.string,
+    currency: PropTypes.shape({
+        image: PropTypes.string,
+        host: PropTypes.string,
+    }),
 };
